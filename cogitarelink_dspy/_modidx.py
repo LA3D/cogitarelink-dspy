@@ -15,4 +15,11 @@ d = { 'settings': { 'branch': 'main',
                                         'cogitarelink_dspy.core.Echo.forward': ('core.html#echo.forward', 'cogitarelink_dspy/core.py'),
                                         'cogitarelink_dspy.core.make_hello_agent': ( 'core.html#make_hello_agent',
                                                                                      'cogitarelink_dspy/core.py')},
-            'cogitarelink_dspy.wrappers': {'cogitarelink_dspy.wrappers.foo': ('wrappers.html#foo', 'cogitarelink_dspy/wrappers.py')}}}
+            'cogitarelink_dspy.wrappers': { 'cogitarelink_dspy.wrappers.get_tools': ( 'wrappers.html#get_tools',
+                                                                                      'cogitarelink_dspy/wrappers.py'),
+                                            'cogitarelink_dspy.wrappers.group_tools_by_layer': ( 'wrappers.html#group_tools_by_layer',
+                                                                                                 'cogitarelink_dspy/wrappers.py'),
+                                            'cogitarelink_dspy.wrappers.make_tool_wrappers': ( 'wrappers.html#make_tool_wrappers',
+                                                                                               'cogitarelink_dspy/wrappers.py'),
+                                            'cogitarelink_dspy.wrappers.parse_signature': ( 'wrappers.html#parse_signature',
+                                                                                            'cogitarelink_dspy/wrappers.py')}}}
