@@ -1,9 +1,9 @@
 [project]
-name = "cogitarelink-dspy"
+name="cogitarelink-dspy"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python=">=3.9"
 dependencies = [
     "cogitarelink @ git+https://github.com/LA3D/cogitarelink.git@main",
     "dspy>=0.1",

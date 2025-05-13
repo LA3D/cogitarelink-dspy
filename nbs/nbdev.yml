@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "cogitarelink-dspy"
+  site-url: "https://LA3D.github.io/cogitarelink-dspy"
+  description: "Experiments with Dspy Agents"
+  repo-branch: main
+  repo-url: "https://github.com/LA3D/cogitarelink-dspy"
