@@ -15,73 +15,119 @@ __all__ = ['COMPONENTS', 'get_tools_by_layer', 'list_layers', 'validate_componen
 
 COMPONENTS = {
     # ===== Basic Echo Tool (for testing) =====
-    "Echo": {
+    "Utils": {
         "layer": "Utility",
         "tool": "EchoMessage",
         "doc": "Simply echoes the input message back.",
-        "calls": "forward(message:str)"
+        "calls": "load_module_source(module_name:str, full_name:bool=False) -> str",
+        "module": "cogitarelink.utils"
     },
     
     # ===== Context Layer =====
-    "SimpleContext": {
+    "ContextProcessor": {
         "layer": "Context",
         "tool": "LoadContext",
-        "doc": "Loads a simple JSON-LD context from a string or URL.",
-        "calls": "load(source:str)"
+        "doc": "Loads and processes JSON-LD contexts.",
+        "calls": "compact(doc:dict, ctx:dict) -> dict",
+        "module": "cogitarelink.core.context"
     },
     
     # ===== Ontology Layer =====
-    "OntologyFetcher": {
+    "VocabRegistry": {
         "layer": "Ontology",
         "tool": "FetchOntology",
-        "doc": "Fetches and caches a vocabulary or ontology by URI.",
-        "calls": "fetch(uri:str)"
+        "doc": "Accesses the vocabulary registry.",
+        "calls": "resolve(uri:str) -> dict",
+        "module": "cogitarelink.vocab.registry"
     },
     
     # ===== Rules Layer =====
-    "SimpleValidator": {
+    "ValidateEntity": {
         "layer": "Rules",
-        "tool": "ValidateTriple",
-        "doc": "Validates if a triple conforms to basic RDF rules.",
-        "calls": "validate(subject:str, predicate:str, object:str)"
+        "tool": "ValidateEntity",
+        "doc": "Validates an Entity against SHACL shapes.",
+        "calls": "validate_entity(target:str, shapes_graph:str) -> bool",
+        "module": "cogitarelink.verify.validator"
     },
     
     # ===== Instances Layer =====
-    "TripleStore": {
+    "GraphManager": {
         "layer": "Instances",
-        "tool": "StoreTriple",
-        "doc": "Stores a triple in the graph manager.",
-        "calls": "add(subject:str, predicate:str, object:str)"
+        "tool": "GraphManager",
+        "doc": "Manages RDF graphs and triples.",
+        "calls": "query(q:str) -> dict",
+        "module": "cogitarelink.core.graph"
     },
     
     # ===== Verification Layer =====
-    "SignatureChecker": {
+    "Signer": {
         "layer": "Verification",
         "tool": "VerifySignature",
         "doc": "Verifies a digital signature on a named graph.",
-        "calls": "verify(graph_id:str, signature:str)"
+        "calls": "verify(graph_id:str, signature:str) -> bool",
+        "module": "cogitarelink.verify.signer"
     }
 }
 
 # %% ../nbs/01_components.ipynb 4
 def get_tools_by_layer(layer, registry=COMPONENTS):
-    """Return all tool definitions for a specific layer."""
+    """Return all tool definitions for a specific layer.
+    
+    Args:
+        layer (str): The layer name to filter by
+        registry (dict, optional): The component registry to use. Defaults to COMPONENTS.
+        
+    Returns:
+        dict: Dictionary of component name to metadata for the specified layer
+    """
     return {name: meta for name, meta in registry.items() 
             if meta['layer'] == layer}
 
 def list_layers(registry=COMPONENTS):
-    """Return all unique layers in the component registry."""
+    """Return all unique layers in the component registry.
+    
+    Args:
+        registry (dict, optional): The component registry to use. Defaults to COMPONENTS.
+        
+    Returns:
+        list: Sorted list of layer names
+    """
     return sorted(list(set(meta['layer'] for meta in registry.values())))
 
 # %% ../nbs/01_components.ipynb 6
 def validate_component_registry(registry=COMPONENTS):
     """Validate that all entries in the component registry have required fields."""
-    required_fields = ['layer', 'tool', 'doc', 'calls']
+    required_fields = ['layer', 'tool', 'doc', 'calls', 'module']
     errors = []
     
     for name, meta in registry.items():
+        # Check required fields
         for field in required_fields:
             if field not in meta:
                 errors.append(f"Component {name} is missing required field '{field}'")
+        
+        # Validate tool name is a valid Python identifier
+        if 'tool' in meta and not meta['tool'].isidentifier():
+            errors.append(f"Component {name} has invalid tool name '{meta['tool']}', must be a valid Python identifier")
+        
+        # Validate calls format
+        if 'calls' in meta:
+            try:
+                # Attempt to parse the signature
+                call_sig = meta['calls']
+                if '(' not in call_sig or ')' not in call_sig:
+                    errors.append(f"Component {name} has malformed calls '{call_sig}', expected format 'method(param:type, ...)'")
+            except Exception as e:
+                errors.append(f"Component {name} has invalid calls string: {str(e)}")
+                
+    # Check for duplicates
+    tools = {}
+    for name, meta in registry.items():
+        if 'tool' in meta:
+            tool_name = meta['tool']
+            if tool_name in tools:
+                errors.append(f"Duplicate tool name '{tool_name}' in components '{name}' and '{tools[tool_name]}'")
+            else:
+                tools[tool_name] = name
                 
     return errors
