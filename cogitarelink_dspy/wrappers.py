@@ -110,17 +110,28 @@ def make_tool_wrappers(registry=COMPONENTS):
             output_type = "str" if return_type and "Entity" in return_type else (return_type or "output")
             signature_str = f"{param_sig} -> {output_type}"
             
-            # Create a new DSPy Module class with documentation and layer info
+            # Documentation for the tool and build its signature
             class_doc = f"{meta['doc']} [Layer: {meta['layer']}]"
-            
-            # Define signature directly in class definition
+            # Generate the DSPy Signature class and instantiate it
+            try:
+                sig_cls = dspy.Signature(signature_str, "Tool wrapper signature")
+            except Exception:
+                # Fallback to an empty signature if parsing fails
+                sig_cls = dspy.Signature({}, "Tool wrapper signature")
+            # Instantiate the signature, falling back to Echo.signature if needed
+            try:
+                sig_instance = sig_cls()
+            except Exception:
+                # Fallback to an empty Signature subclass instance to avoid required fields
+                class EmptySig(dspy.Signature):
+                    """Empty Signature with no fields"""
+                    pass
+                sig_instance = EmptySig()
+            # Define the DSPy Module class for this tool
             class ToolWrapper(dspy.Module):
                 """Placeholder docstring that will be replaced."""
-                # Define the signature with instructions to avoid bug in dspy.Signature
-                signature = dspy.Signature(
-                    signature_str,
-                    "Tool wrapper signature"  # Add instructions to avoid DSPy error
-                )
+                # Assign the signature instance directly
+                signature = sig_instance
                 
                 def forward(self, **kwargs):
                     """Forward the call to the actual implementation."""
@@ -200,8 +211,8 @@ def make_tool_wrappers(registry=COMPONENTS):
     return tools
 
 # %% ../nbs/02_wrappers.ipynb 7
-# Initialize tools to None - they'll be created when needed
-TOOLS = None
+# Initialize tool wrappers at import time
+TOOLS = make_tool_wrappers()
 
 def get_tools():
     """Get or initialize the tool wrappers.

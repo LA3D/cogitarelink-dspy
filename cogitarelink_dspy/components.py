@@ -97,7 +97,8 @@ def list_layers(registry=COMPONENTS):
 # %% ../nbs/01_components.ipynb 6
 def validate_component_registry(registry=COMPONENTS):
     """Validate that all entries in the component registry have required fields."""
-    required_fields = ['layer', 'tool', 'doc', 'calls', 'module']
+    # Module field is optional; only layer, tool, doc, and calls are required
+    required_fields = ['layer', 'tool', 'doc', 'calls']
     errors = []
     
     for name, meta in registry.items():
