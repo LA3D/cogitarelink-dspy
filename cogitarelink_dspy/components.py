@@ -66,6 +66,29 @@ COMPONENTS = {
         "doc": "Verifies a digital signature on a named graph.",
         "calls": "verify(graph_id:str, signature:str) -> bool",
         "module": "cogitarelink.verify.signer"
+    },
+    
+    # ===== Memory Tools =====
+    "AddReflection": {
+        "layer":"Utility",
+        "tool":"AddReflection",
+        "doc":"Persist a reflection into semantic memory",
+        "calls":"add(text:str, tags:list=None)->str",
+        "module":"cogitarelink_dspy.memory"
+    },
+    "RecallReflection": {
+        "layer":"Utility",
+        "tool":"RecallReflection",
+        "doc":"Retrieve recent reflection notes",
+        "calls":"retrieve(limit:int, tag_filter:str=None)->list",
+        "module":"cogitarelink_dspy.memory"
+    },
+    "ReflectionPrompt": {
+        "layer":"Utility",
+        "tool":"ReflectionPrompt",
+        "doc":"Format recent notes for prompt injection",
+        "calls":"as_prompt(limit:int)->str",
+        "module":"cogitarelink_dspy.memory"
     }
 }
 

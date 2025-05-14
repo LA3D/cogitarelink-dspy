@@ -1,0 +1,33 @@
+{"q":"Remember that wdt:P1476 is title","exp_tool":"AddReflection"}
+{"q":"What's the Wikidata title property?","use_memory":true,"exp_tool":"RecallReflection"}
+{"q":"Inject notes into system prompt","exp_tool":"ReflectionPrompt"}
+{"q":"Store the fact that schema:name is a common property","exp_tool":"AddReflection"}
+{"q":"Can you save rdfs:label for later reference?","exp_tool":"AddReflection"}
+{"q":"Make a note that owl:sameAs indicates identity between resources","exp_tool":"AddReflection"}
+{"q":"Remember that foaf:Person is a class for people","exp_tool":"AddReflection"}
+{"q":"Remember that dc:creator represents the author","exp_tool":"AddReflection"}
+{"q":"Store information that skos:broader indicates hierarchy","exp_tool":"AddReflection"}
+{"q":"Please recall what you know about Wikidata properties","use_memory":true,"exp_tool":"RecallReflection"}
+{"q":"What did I tell you about rdfs:label?","use_memory":true,"exp_tool":"RecallReflection"}
+{"q":"Can you retrieve information about owl:sameAs?","use_memory":true,"exp_tool":"RecallReflection"}
+{"q":"What do you remember about FOAF ontology?","use_memory":true,"exp_tool":"RecallReflection"}
+{"q":"Tell me what you know about Dublin Core properties","use_memory":true,"exp_tool":"RecallReflection"}
+{"q":"What did we discuss about SKOS?","use_memory":true,"exp_tool":"RecallReflection"}
+{"q":"Format your notes for the system prompt","exp_tool":"ReflectionPrompt"}
+{"q":"Prepare relevant memory for inclusion in prompt","exp_tool":"ReflectionPrompt"}
+{"q":"Create a memory summary for the system context","exp_tool":"ReflectionPrompt"}
+{"q":"Inject your knowledge about RDF into the prompt","exp_tool":"ReflectionPrompt"}
+{"q":"Format stored notes about ontologies for system use","exp_tool":"ReflectionPrompt"}
+{"q":"Generate a memory summary for the agent","exp_tool":"ReflectionPrompt"}
+{"q":"Add dct:title to your knowledge base","exp_tool":"AddReflection"}
+{"q":"Note that geo:lat and geo:long are for coordinates","exp_tool":"AddReflection"}
+{"q":"I want you to remember that rdf:type connects instances to classes","exp_tool":"AddReflection"}
+{"q":"Remember vocab:hasTag is for tagging resources","exp_tool":"AddReflection"}
+{"q":"Store the fact that vcard:fn is for formatted names","exp_tool":"AddReflection"}
+{"q":"Keep in mind that sioc:content contains the text content","exp_tool":"AddReflection"}
+{"q":"What is dct:title used for?","use_memory":true,"exp_tool":"RecallReflection"}
+{"q":"Tell me about geographic coordinates in RDF","use_memory":true,"exp_tool":"RecallReflection"}
+{"q":"What do you recall about rdf:type?","use_memory":true,"exp_tool":"RecallReflection"}
+{"q":"Can you remind me what vocab:hasTag is for?","use_memory":true,"exp_tool":"RecallReflection"}
+{"q":"What is vcard:fn in the vCard ontology?","use_memory":true,"exp_tool":"RecallReflection"}
+{"q":"What was sioc:content used for?","use_memory":true,"exp_tool":"RecallReflection"}
