@@ -1,0 +1,27 @@
+{
+  "@context": {
+    "cl": "https://w3id.org/cogitarelink#",
+    "schema": "http://schema.org/",
+    "http": "http://www.w3.org/2011/http#",
+
+    "TelemetryEvent": {
+      "@id": "cl:TelemetryEvent"
+    },
+
+    "eventType": {
+      "@id": "schema:eventType"
+    },
+    "quantity": {
+      "@id": "schema:quantity"
+    },
+    "dateCreated": {
+      "@id": "schema:dateCreated"
+    },
+    "relatesToTool": {
+      "@id": "cl:relatesToTool"
+    },
+    "statusCode": {
+      "@id": "http:statusCode"
+    }
+  }
+}

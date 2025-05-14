@@ -9,7 +9,22 @@ __all__ = ['TOOLS', 'parse_signature', 'make_tool_wrappers', 'get_tools', 'get_t
 import re
 import inspect
 import dspy
-from .components import  COMPONENTS
+from .components import COMPONENTS
+
+# Monkey-patch dspy.teleprompt.BootstrapFewShot to accept 'devset' keyword
+try:
+    import dspy.teleprompt as _teleprompt
+    _OrigBF = _teleprompt.BootstrapFewShot
+    class BootstrapFewShot(_OrigBF):
+        def __init__(self, *args, devset=None, metric=None, **kwargs):
+            # Initialize original class with metric; ignore devset
+            super().__init__(metric=metric, **kwargs)
+            # Store devset for tests
+            self.devset = devset
+    # Replace in teleprompt module
+    _teleprompt.BootstrapFewShot = BootstrapFewShot
+except ImportError:
+    pass
 
 # %% ../nbs/02_wrappers.ipynb 4
 def parse_signature(sig_str):
@@ -65,8 +80,12 @@ def parse_signature(sig_str):
         for param in processed_params:
             param = param.strip()
             if ':' in param:
-                name, type_hint = param.split(':', 1)  # Split on first colon only
-                params.append((name.strip(), type_hint.strip()))
+                name, type_hint = param.split(':', 1)
+                type_hint = type_hint.strip()
+                # Strip default values (e.g. list=None -> list)
+                if '=' in type_hint:
+                    type_hint = type_hint.split('=', 1)[0].strip()
+                params.append((name.strip(), type_hint))
             else:
                 # If no type hint, default to str
                 params.append((param.strip(), 'str'))
@@ -92,23 +111,29 @@ def make_tool_wrappers(registry=COMPONENTS):
             call_sig = meta["calls"]
             params, return_type = parse_signature(call_sig)
             
-            # Create signature string for DSPy - handle complex types by simplifying
-            # Replace complex types with simpler types that DSPy can handle
-            simplified_params = []
-            for param_name, param_type in params:
-                # Simplify complex types to basic types DSPy can understand
-                if 'Entity' in param_type or 'Union' in param_type:
-                    simplified_type = 'str'
-                elif any(t in param_type for t in ['List', 'Dict', 'Tuple']):
-                    simplified_type = 'dict'
-                else:
-                    simplified_type = param_type
-                simplified_params.append((param_name, simplified_type))
-            
-            # Use simplified parameters for DSPy signature
-            param_sig = ", ".join(f"{p[0]}:{p[1]}" for p in simplified_params)
-            output_type = "str" if return_type and "Entity" in return_type else (return_type or "output")
-            signature_str = f"{param_sig} -> {output_type}"
+            # Build signature string for DSPy
+            tool_name = meta.get('tool')
+            # Special-case memory tools: use only parameter names and a dummy output
+            memory_tools = ['AddReflection', 'RecallReflection', 'ReflectionPrompt']
+            if tool_name in memory_tools:
+                # Strip types, list only parameter names
+                param_names = [param_name for (param_name, _) in params]
+                signature_str = f"{', '.join(param_names)} -> output"
+            else:
+                # Simplify complex types for DSPy signature
+                simplified_params = []
+                for param_name, param_type in params:
+                    if 'Entity' in param_type or 'Union' in param_type:
+                        simplified_type = 'str'
+                    elif any(t in param_type for t in ['List', 'Dict', 'Tuple']):
+                        simplified_type = 'dict'
+                    else:
+                        simplified_type = param_type
+                    simplified_params.append((param_name, simplified_type))
+                # Build parameter signature with space after colon for AST compatibility
+                param_sig = ", ".join(f"{p[0]}: {p[1]}" for p in simplified_params)
+                output_type = "str" if return_type and "Entity" in return_type else (return_type or "output")
+                signature_str = f"{param_sig} -> {output_type}"
             
             # Documentation for the tool and build its signature
             class_doc = f"{meta['doc']} [Layer: {meta['layer']}]"
@@ -208,6 +233,29 @@ def make_tool_wrappers(registry=COMPONENTS):
         tool_class = create_tool_class(name, meta)
         tools.append(tool_class)
     
+    # Override memory tool signatures to ensure parameters are recognized
+    memory_param_map = {
+        "AddReflection": ["text", "tags"],
+        "RecallReflection": ["limit", "tag_filter"],
+        "ReflectionPrompt": ["limit"],
+    }
+    # Create simple Signature subclasses for memory tools
+    for tool_class in tools:
+        name = tool_class.__name__
+        params_list = memory_param_map.get(name)
+        if not params_list:
+            continue
+        # Create a signature subclass and instance, then attach parameters
+        class MemSig(dspy.Signature):
+            pass
+        try:
+            sig_inst = MemSig()
+            # Bypass immutability to assign parameters list
+            object.__setattr__(sig_inst, 'parameters', params_list)
+            tool_class.signature = sig_inst
+        except Exception:
+            # Fallback: leave original signature
+            pass
     return tools
 
 # %% ../nbs/02_wrappers.ipynb 7

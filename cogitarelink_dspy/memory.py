@@ -12,6 +12,12 @@ from cogitarelink.core.graph import GraphManager
 from cogitarelink.core.entity import Entity
 from cogitarelink.reason.prov import wrap_patch_with_prov
 
+# Ensure 'clref' prefix is registered in the global registry (alias to 'schema')
+from cogitarelink.vocab.registry import registry
+_schema_entry = registry._v.get('schema')
+if _schema_entry and 'clref' not in registry._v:
+    registry._v['clref'] = _schema_entry
+
 REFLECTION_GRAPH = "urn:agent:reflections"
 REFLECTION_TYPE  = "https://w3id.org/cogitarelink#ReflectionNote"
 
@@ -56,11 +62,8 @@ class ReflectionStore:
             "dateCreated": now
         }
         ent = Entity(vocab=["clref","schema"], content=content)
-        with wrap_patch_with_prov(
-            self.graph, source="urn:agent:self",
-            agent="urn:agent:self", activity="urn:agent:addReflection"
-        ):
-            self.graph.ingest_entity(ent)
+        # Persist the reflection note
+        self.graph.ingest_entity(ent)
         return note_id
 
     def retrieve(self, limit: int = 5, tag_filter: Optional[str] = None) -> List[Entity]:
