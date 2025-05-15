@@ -106,7 +106,7 @@ def train_memory_planner(devset, metric=tool_match, num_iterations=3, graph_mana
     planner = MemoryPlanner(graph_manager)
     
     # Set up the bootstrap trainer
-    trainer = BootstrapFewShot(devset=devset, metric=metric)
+    trainer = BootstrapFewShot(trainset=devset, metric=metric)
     
     # Configure search space for optimization
     search_space = {
