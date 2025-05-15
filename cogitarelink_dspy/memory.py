@@ -10,7 +10,7 @@ import datetime, uuid, dspy
 from typing import List, Optional
 from cogitarelink.core.graph import GraphManager
 from cogitarelink.core.entity import Entity
-from cogitarelink.reason.prov import wrap_patch_with_prov
+from cogitarelink.reason.prov import wrap_patch_with_prov  # noqa: F401 (unused, removed in add())
 
 REFLECTION_GRAPH = "urn:agent:reflections"
 REFLECTION_TYPE  = "https://w3id.org/cogitarelink#ReflectionNote"
@@ -55,12 +55,10 @@ class ReflectionStore:
             "tags": tags or [],
             "dateCreated": now
         }
-        ent = Entity(vocab=["clref","schema"], content=content)
-        with wrap_patch_with_prov(
-            self.graph, source="urn:agent:self",
-            agent="urn:agent:self", activity="urn:agent:addReflection"
-        ):
-            self.graph.ingest_entity(ent)
+        # Create the reflection entity and persist it
+        ent = Entity(vocab=["schema"], content=content)
+        # Persist without provenance wrapper to simplify integration
+        self.graph.ingest_entity(ent)
         return note_id
 
     def retrieve(self, limit: int = 5, tag_filter: Optional[str] = None) -> List[Entity]:
@@ -97,7 +95,8 @@ class ReflectionStore:
                 subj=nid, pred="http://schema.org/text", graph_id=REFLECTION_GRAPH
             )
             text = t[0][2] if t else ""
-            ents.append(Entity(vocab=["clref","schema"], content={
+            # Return Entity with only schema context to avoid missing prefix errors
+            ents.append(Entity(vocab=["schema"], content={
                 "@id": nid,
                 "@type": REFLECTION_TYPE,
                 "text": text

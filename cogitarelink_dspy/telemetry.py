@@ -6,6 +6,8 @@
 
 import datetime
 import uuid
+import os
+import json
 
 from typing import Any
 from cogitarelink.core.graph import GraphManager
@@ -52,8 +54,14 @@ class TelemetryStore(ReflectionStore):
         }
         # Merge any extra fields
         content.update(kw)
-        # Use reflection context and schema; omit HTTP prefix to avoid missing registry entry
-        ent = Entity(vocab=["clref", "schema"], content=content)
+        # Include inline JSON-LD context to define telemetry terms without requiring registry entry
+        ctx_path = os.path.join(os.path.dirname(__file__), "contexts", "telemetry.context.jsonld")
+        with open(ctx_path, "r") as f:
+            ctx_json = json.load(f)
+        # Inline context mapping
+        content["@context"] = ctx_json.get("@context", {})
+        # Use schema vocab placeholder (will be overridden by inline context)
+        ent = Entity(vocab=["schema"], content=content)
         # Persist the telemetry event
         self.graph.ingest_entity(ent)
         return event_id

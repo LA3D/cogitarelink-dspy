@@ -3,7 +3,7 @@ name="cogitarelink-dspy"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python=">=3.9"
+requires-python=">=3.10"
 dependencies = [
     "cogitarelink @ git+https://github.com/LA3D/cogitarelink.git@main",
     "dspy>=0.1",

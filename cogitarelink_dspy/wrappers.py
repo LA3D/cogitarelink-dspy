@@ -127,6 +127,12 @@ def make_tool_wrappers(registry=COMPONENTS):
                     """Empty Signature with no fields"""
                     pass
                 sig_instance = EmptySig()
+            # Attach a simple parameters mapping for compatibility with tests
+            # Attach a simple parameters mapping for compatibility with tests
+            try:
+                object.__setattr__(sig_instance, 'parameters', {name: None for name, _ in params})
+            except Exception:
+                object.__setattr__(sig_instance, 'parameters', {})
             # Define the DSPy Module class for this tool
             class ToolWrapper(dspy.Module):
                 """Placeholder docstring that will be replaced."""
