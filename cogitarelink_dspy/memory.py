@@ -12,6 +12,12 @@ from cogitarelink.core.graph import GraphManager
 from cogitarelink.core.entity import Entity
 from cogitarelink.reason.prov import wrap_patch_with_prov  # noqa: F401 (unused, removed in add())
 
+# Ensure 'clref' prefix is registered in the global registry (alias to 'schema')
+from cogitarelink.vocab.registry import registry
+_schema_entry = registry._v.get('schema')
+if _schema_entry and 'clref' not in registry._v:
+    registry._v['clref'] = _schema_entry
+
 REFLECTION_GRAPH = "urn:agent:reflections"
 REFLECTION_TYPE  = "https://w3id.org/cogitarelink#ReflectionNote"
 
@@ -56,7 +62,7 @@ class ReflectionStore:
             "dateCreated": now
         }
         # Create the reflection entity and persist it
-        ent = Entity(vocab=["schema"], content=content)
+        ent = Entity(vocab=["clref","schema"], content=content)
         # Persist without provenance wrapper to simplify integration
         self.graph.ingest_entity(ent)
         return note_id
@@ -95,8 +101,8 @@ class ReflectionStore:
                 subj=nid, pred="http://schema.org/text", graph_id=REFLECTION_GRAPH
             )
             text = t[0][2] if t else ""
-            # Return Entity with only schema context to avoid missing prefix errors
-            ents.append(Entity(vocab=["schema"], content={
+            # Return Entity with clref and schema context
+            ents.append(Entity(vocab=["clref","schema"], content={
                 "@id": nid,
                 "@type": REFLECTION_TYPE,
                 "text": text
