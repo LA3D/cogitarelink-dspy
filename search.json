@@ -1,0 +1,363 @@
+[
+  {
+    "objectID": "memory_training.html",
+    "href": "memory_training.html",
+    "title": "Training and Optimizing the Reflection Memory System",
+    "section": "",
+    "text": "First, we’ll set up the notebook with the required imports and configure DSPy with an appropriate LLM.\n\n# Configure DSPy with your preferred LLM\n# You can use OpenAI, Anthropic, or any local model supported by DSPy\n\n# Example for OpenAI\n# If using OpenAI, set your API key in the environment or pass it directly\n# os.environ[\"OPENAI_API_KEY\"] = \"your-api-key\"\n# lm = dspy.OpenAI(model=\"gpt-4o\")\n\n# Example for Anthropic\n# os.environ[\"ANTHROPIC_API_KEY\"] = \"your-api-key\"\n# lm = dspy.LM(\"anthropic/claude-3-opus-20240229\")\n\n# For testing without an actual LLM, we'll use a mock LLM\nclass MockLM(dspy.LM):\n    def __init__(self):\n        self.history = []\n    \n    def basic_request(self, prompt, **kwargs):\n        self.history.append(prompt)\n        return [\"This is a mock response for testing\"]\n\nlm = MockLM()\ndspy.configure(lm=lm)",
+    "crumbs": [
+      "Training and Optimizing the Reflection Memory System"
+    ]
+  },
+  {
+    "objectID": "memory_training.html#setup-and-configuration",
+    "href": "memory_training.html#setup-and-configuration",
+    "title": "Training and Optimizing the Reflection Memory System",
+    "section": "",
+    "text": "First, we’ll set up the notebook with the required imports and configure DSPy with an appropriate LLM.\n\n# Configure DSPy with your preferred LLM\n# You can use OpenAI, Anthropic, or any local model supported by DSPy\n\n# Example for OpenAI\n# If using OpenAI, set your API key in the environment or pass it directly\n# os.environ[\"OPENAI_API_KEY\"] = \"your-api-key\"\n# lm = dspy.OpenAI(model=\"gpt-4o\")\n\n# Example for Anthropic\n# os.environ[\"ANTHROPIC_API_KEY\"] = \"your-api-key\"\n# lm = dspy.LM(\"anthropic/claude-3-opus-20240229\")\n\n# For testing without an actual LLM, we'll use a mock LLM\nclass MockLM(dspy.LM):\n    def __init__(self):\n        self.history = []\n    \n    def basic_request(self, prompt, **kwargs):\n        self.history.append(prompt)\n        return [\"This is a mock response for testing\"]\n\nlm = MockLM()\ndspy.configure(lm=lm)",
+    "crumbs": [
+      "Training and Optimizing the Reflection Memory System"
+    ]
+  },
+  {
+    "objectID": "memory_training.html#create-or-load-training-data",
+    "href": "memory_training.html#create-or-load-training-data",
+    "title": "Training and Optimizing the Reflection Memory System",
+    "section": "Create or Load Training Data",
+    "text": "Create or Load Training Data\nNext, we’ll load our development set for training the memory components. In this case, we’ll use the examples from devset_memory.jsonl.\n\ndef load_devset(path=\"../tests/devset_memory.jsonl\"):\n    \"\"\"Load the memory development set from JSONL.\"\"\"\n    examples = []\n    \n    with open(path, 'r') as f:\n        for line in f:\n            data = json.loads(line)\n            # Convert to DSPy Example format\n            example = dspy.Example(\n                q=data[\"q\"],\n                exp_tool=data[\"exp_tool\"],\n                use_memory=data.get(\"use_memory\", False)\n            ).with_inputs(\"q\")\n            examples.append(example)\n            \n    return examples\n\n# Load the development set\ndevset = load_devset()\n\n\n# Display the development set\nfor i, example in enumerate(devset):\n    print(f\"Example {i+1}:\")\n    print(f\"Query: {example.q}\")\n    print(f\"Expected Tool: {example.exp_tool}\")\n    print(f\"Use Memory: {example.use_memory}\")\n    print(\"---\")\n\nExample 1:\nQuery: Remember that wdt:P1476 is title\nExpected Tool: AddReflection\nUse Memory: False\n---\nExample 2:\nQuery: What's the Wikidata title property?\nExpected Tool: RecallReflection\nUse Memory: True\n---\nExample 3:\nQuery: Inject notes into system prompt\nExpected Tool: ReflectionPrompt\nUse Memory: False\n---\nExample 4:\nQuery: Store the fact that schema:name is a common property\nExpected Tool: AddReflection\nUse Memory: False\n---\nExample 5:\nQuery: Can you save rdfs:label for later reference?\nExpected Tool: AddReflection\nUse Memory: False\n---\nExample 6:\nQuery: Make a note that owl:sameAs indicates identity between resources\nExpected Tool: AddReflection\nUse Memory: False\n---\nExample 7:\nQuery: Remember that foaf:Person is a class for people\nExpected Tool: AddReflection\nUse Memory: False\n---\nExample 8:\nQuery: Remember that dc:creator represents the author\nExpected Tool: AddReflection\nUse Memory: False\n---\nExample 9:\nQuery: Store information that skos:broader indicates hierarchy\nExpected Tool: AddReflection\nUse Memory: False\n---\nExample 10:\nQuery: Please recall what you know about Wikidata properties\nExpected Tool: RecallReflection\nUse Memory: True\n---\nExample 11:\nQuery: What did I tell you about rdfs:label?\nExpected Tool: RecallReflection\nUse Memory: True\n---\nExample 12:\nQuery: Can you retrieve information about owl:sameAs?\nExpected Tool: RecallReflection\nUse Memory: True\n---\nExample 13:\nQuery: What do you remember about FOAF ontology?\nExpected Tool: RecallReflection\nUse Memory: True\n---\nExample 14:\nQuery: Tell me what you know about Dublin Core properties\nExpected Tool: RecallReflection\nUse Memory: True\n---\nExample 15:\nQuery: What did we discuss about SKOS?\nExpected Tool: RecallReflection\nUse Memory: True\n---\nExample 16:\nQuery: Format your notes for the system prompt\nExpected Tool: ReflectionPrompt\nUse Memory: False\n---\nExample 17:\nQuery: Prepare relevant memory for inclusion in prompt\nExpected Tool: ReflectionPrompt\nUse Memory: False\n---\nExample 18:\nQuery: Create a memory summary for the system context\nExpected Tool: ReflectionPrompt\nUse Memory: False\n---\nExample 19:\nQuery: Inject your knowledge about RDF into the prompt\nExpected Tool: ReflectionPrompt\nUse Memory: False\n---\nExample 20:\nQuery: Format stored notes about ontologies for system use\nExpected Tool: ReflectionPrompt\nUse Memory: False\n---\nExample 21:\nQuery: Generate a memory summary for the agent\nExpected Tool: ReflectionPrompt\nUse Memory: False\n---\nExample 22:\nQuery: Add dct:title to your knowledge base\nExpected Tool: AddReflection\nUse Memory: False\n---\nExample 23:\nQuery: Note that geo:lat and geo:long are for coordinates\nExpected Tool: AddReflection\nUse Memory: False\n---\nExample 24:\nQuery: I want you to remember that rdf:type connects instances to classes\nExpected Tool: AddReflection\nUse Memory: False\n---\nExample 25:\nQuery: Remember vocab:hasTag is for tagging resources\nExpected Tool: AddReflection\nUse Memory: False\n---\nExample 26:\nQuery: Store the fact that vcard:fn is for formatted names\nExpected Tool: AddReflection\nUse Memory: False\n---\nExample 27:\nQuery: Keep in mind that sioc:content contains the text content\nExpected Tool: AddReflection\nUse Memory: False\n---\nExample 28:\nQuery: What is dct:title used for?\nExpected Tool: RecallReflection\nUse Memory: True\n---\nExample 29:\nQuery: Tell me about geographic coordinates in RDF\nExpected Tool: RecallReflection\nUse Memory: True\n---\nExample 30:\nQuery: What do you recall about rdf:type?\nExpected Tool: RecallReflection\nUse Memory: True\n---\nExample 31:\nQuery: Can you remind me what vocab:hasTag is for?\nExpected Tool: RecallReflection\nUse Memory: True\n---\nExample 32:\nQuery: What is vcard:fn in the vCard ontology?\nExpected Tool: RecallReflection\nUse Memory: True\n---\nExample 33:\nQuery: What was sioc:content used for?\nExpected Tool: RecallReflection\nUse Memory: True\n---",
+    "crumbs": [
+      "Training and Optimizing the Reflection Memory System"
+    ]
+  },
+  {
+    "objectID": "memory_training.html#define-the-metric-function",
+    "href": "memory_training.html#define-the-metric-function",
+    "title": "Training and Optimizing the Reflection Memory System",
+    "section": "Define the Metric Function",
+    "text": "Define the Metric Function\nWe’ll define a metric function to evaluate whether the agent is selecting the correct tool.\n\nsource\n\ntool_match\n\n tool_match (pred, sample)\n\nCheck if the expected tool is in the trace.",
+    "crumbs": [
+      "Training and Optimizing the Reflection Memory System"
+    ]
+  },
+  {
+    "objectID": "memory_training.html#create-a-memory-planner-agent",
+    "href": "memory_training.html#create-a-memory-planner-agent",
+    "title": "Training and Optimizing the Reflection Memory System",
+    "section": "Create a Memory Planner Agent",
+    "text": "Create a Memory Planner Agent\nNow, we’ll define a DSPy Module that integrates the memory tools.\n\nsource\n\nMemoryPlanner\n\n MemoryPlanner (graph_manager=None)\n\nA DSPy module that selects the appropriate memory operation based on the query.",
+    "crumbs": [
+      "Training and Optimizing the Reflection Memory System"
+    ]
+  },
+  {
+    "objectID": "memory_training.html#train-the-memory-planner-with-dspy",
+    "href": "memory_training.html#train-the-memory-planner-with-dspy",
+    "title": "Training and Optimizing the Reflection Memory System",
+    "section": "Train the Memory Planner with DSPy",
+    "text": "Train the Memory Planner with DSPy\nNow we’ll train our memory planner using the DSPy BootstrapFewShot optimizer.\n\nsource\n\ntrain_memory_planner\n\n train_memory_planner (devset, metric=&lt;function tool_match&gt;,\n                       num_iterations=3, graph_manager=None)\n\nTrain the memory planner using DSPy’s compilation framework.\n\nsource\n\n\ntrain_memory_planner_simba\n\n train_memory_planner_simba (trainset, metric=&lt;function tool_match&gt;,\n                             graph_manager=None, max_steps:int=20,\n                             max_demos:int=5, seed:int=42)\n\nTrain the MemoryPlanner’s tool-selection policy using SIMBA.\n\n# Train the memory planner\nfrom cogitarelink.core.graph import GraphManager\ngraph_manager = GraphManager()\nif len(devset) &lt; 32:\n    # fallback to BootstrapFewShot when dataset is too small\n    print(f\"Trainset too small ({len(devset)} &lt; 32); using BootstrapFewShot instead\")\n    optimized_planner = train_memory_planner(devset, metric=tool_match, graph_manager=graph_manager)\nelse:\n    optimized_planner = train_memory_planner_simba(\n        trainset=devset,\n        graph_manager=graph_manager,\n        max_steps=20,\n        max_demos=5,\n        seed=42,\n    )\nprint(\"✅ Training complete.\")",
+    "crumbs": [
+      "Training and Optimizing the Reflection Memory System"
+    ]
+  },
+  {
+    "objectID": "memory_training.html#save-and-load-the-optimized-planner",
+    "href": "memory_training.html#save-and-load-the-optimized-planner",
+    "title": "Training and Optimizing the Reflection Memory System",
+    "section": "Save and Load the Optimized Planner",
+    "text": "Save and Load the Optimized Planner\nNow we’ll save the optimized planner so it can be distributed with the package.\n\nsource\n\nload_optimized_planner\n\n load_optimized_planner\n                         (path='../cogitarelink_dspy/optimized/memory_plan\n                         ner.pkl', graph_manager=None)\n\nLoad the optimized memory planner from disk.\n\nsource\n\n\nsave_optimized_planner\n\n save_optimized_planner (planner,\n                         path='../cogitarelink_dspy/optimized/memory_plann\n                         er.pkl')\n\nSave the optimized memory planner to disk.\n\n# Save the optimized planner\nsaved_path = save_optimized_planner(optimized_planner)\nprint(f\"Saved optimized planner to {saved_path}\")",
+    "crumbs": [
+      "Training and Optimizing the Reflection Memory System"
+    ]
+  },
+  {
+    "objectID": "memory_training.html#test-the-optimized-planner",
+    "href": "memory_training.html#test-the-optimized-planner",
+    "title": "Training and Optimizing the Reflection Memory System",
+    "section": "Test the Optimized Planner",
+    "text": "Test the Optimized Planner\nLet’s test the optimized planner with some examples.\n\n# Load the optimized planner\nloaded_planner = load_optimized_planner()\n\n# Test with a few examples\ntest_queries = [\n    \"Remember that owl:sameAs is used for identity statements\",\n    \"What do you know about Wikidata properties?\",\n    \"Format the recent notes for inclusion in the prompt\"\n]\n\nfor query in test_queries:\n    result = loaded_planner(q=query)\n    print(f\"Query: {query}\")\n    print(f\"Selected Tool: {result['trace']}\")\n    print(f\"Response: {result['response']}\")\n    print(\"---\")",
+    "crumbs": [
+      "Training and Optimizing the Reflection Memory System"
+    ]
+  },
+  {
+    "objectID": "memory_training.html#integration-with-the-cogitarelink-dspy-agent",
+    "href": "memory_training.html#integration-with-the-cogitarelink-dspy-agent",
+    "title": "Training and Optimizing the Reflection Memory System",
+    "section": "Integration with the Cogitarelink DSPy Agent",
+    "text": "Integration with the Cogitarelink DSPy Agent\nNow we’ll show how to integrate the optimized memory planner with the main Cogitarelink DSPy agent.\n\nsource\n\nCogitarelinkAgent\n\n CogitarelinkAgent (graph_manager=None)\n\nA DSPy agent for Cogitarelink with integrated reflection memory.\n\n# Create the full agent\nagent = CogitarelinkAgent()\n\n# Test with different types of queries\nqueries = [\n    \"Remember that rdfs:label is used for display names\",  # Memory operation\n    \"What is the capital of France?\",  # Regular query\n    \"What important information do you have about Wikidata properties?\"  # Query that uses memory context\n]\n\nfor query in queries:\n    result = agent(query=query)\n    print(f\"Query: {query}\")\n    print(f\"Tool Used: {result['tool_used']}\")\n    print(f\"Is Memory Operation: {result['is_memory_operation']}\")\n    print(f\"Response: {result['response']}\")\n    print(\"---\")",
+    "crumbs": [
+      "Training and Optimizing the Reflection Memory System"
+    ]
+  },
+  {
+    "objectID": "memory_training.html#conclusion",
+    "href": "memory_training.html#conclusion",
+    "title": "Training and Optimizing the Reflection Memory System",
+    "section": "Conclusion",
+    "text": "Conclusion\nIn this notebook, we’ve demonstrated how to:\n\nDefine a memory planner that integrates with DSPy\nTrain and optimize the planner using DSPy’s compilation framework\nSave and load the optimized planner for distribution\nIntegrate the memory system with a full Cogitarelink agent\n\nThis approach allows for declarative optimization of the memory system and ensures that agents can effectively utilize semantic memory for reflective learning.",
+    "crumbs": [
+      "Training and Optimizing the Reflection Memory System"
+    ]
+  },
+  {
+    "objectID": "archive/components.html",
+    "href": "archive/components.html",
+    "title": "Component Catalog",
+    "section": "",
+    "text": "source\n\nlist_layers\n\n list_layers (registry={'Utils': {'layer': 'Utility', 'tool':\n              'EchoMessage', 'doc': 'Simply echoes the input message\n              back.', 'calls': 'load_module_source(module_name:str,\n              full_name:bool=False) -&gt; str', 'module':\n              'cogitarelink.utils'}, 'ContextProcessor': {'layer':\n              'Context', 'tool': 'LoadContext', 'doc': 'Loads and\n              processes JSON-LD contexts.', 'calls': 'compact(doc:dict,\n              ctx:dict) -&gt; dict', 'module': 'cogitarelink.core.context'},\n              'VocabRegistry': {'layer': 'Ontology', 'tool':\n              'FetchOntology', 'doc': 'Accesses the vocabulary registry.',\n              'calls': 'resolve(uri:str) -&gt; dict', 'module':\n              'cogitarelink.vocab.registry'}, 'ValidateEntity': {'layer':\n              'Rules', 'tool': 'ValidateEntity', 'doc': 'Validates an\n              Entity against SHACL shapes.', 'calls':\n              'validate_entity(target:str, shapes_graph:str) -&gt; bool',\n              'module': 'cogitarelink.verify.validator'}, 'GraphManager':\n              {'layer': 'Instances', 'tool': 'GraphManager', 'doc':\n              'Manages RDF graphs and triples.', 'calls': 'query(q:str) -&gt;\n              dict', 'module': 'cogitarelink.core.graph'}, 'Signer':\n              {'layer': 'Verification', 'tool': 'VerifySignature', 'doc':\n              'Verifies a digital signature on a named graph.', 'calls':\n              'verify(graph_id:str, signature:str) -&gt; bool', 'module':\n              'cogitarelink.verify.signer'}, 'AddReflection': {'layer':\n              'Utility', 'tool': 'AddReflection', 'doc': 'Persist a\n              reflection into semantic memory', 'calls': 'add(text:str,\n              tags:list=None)-&gt;str', 'module':\n              'cogitarelink_dspy.memory'}, 'RecallReflection': {'layer':\n              'Utility', 'tool': 'RecallReflection', 'doc': 'Retrieve\n              recent reflection notes', 'calls': 'retrieve(limit:int,\n              tag_filter:str=None)-&gt;list', 'module':\n              'cogitarelink_dspy.memory'}, 'ReflectionPrompt': {'layer':\n              'Utility', 'tool': 'ReflectionPrompt', 'doc': 'Format recent\n              notes for prompt injection', 'calls':\n              'as_prompt(limit:int)-&gt;str', 'module':\n              'cogitarelink_dspy.memory'}})\n\n*Return all unique layers in the component registry.\nArgs: registry (dict, optional): The component registry to use. Defaults to COMPONENTS.\nReturns: list: Sorted list of layer names*\n\nsource\n\n\nget_tools_by_layer\n\n get_tools_by_layer (layer, registry={'Utils': {'layer': 'Utility',\n                     'tool': 'EchoMessage', 'doc': 'Simply echoes the\n                     input message back.', 'calls':\n                     'load_module_source(module_name:str,\n                     full_name:bool=False) -&gt; str', 'module':\n                     'cogitarelink.utils'}, 'ContextProcessor': {'layer':\n                     'Context', 'tool': 'LoadContext', 'doc': 'Loads and\n                     processes JSON-LD contexts.', 'calls':\n                     'compact(doc:dict, ctx:dict) -&gt; dict', 'module':\n                     'cogitarelink.core.context'}, 'VocabRegistry':\n                     {'layer': 'Ontology', 'tool': 'FetchOntology', 'doc':\n                     'Accesses the vocabulary registry.', 'calls':\n                     'resolve(uri:str) -&gt; dict', 'module':\n                     'cogitarelink.vocab.registry'}, 'ValidateEntity':\n                     {'layer': 'Rules', 'tool': 'ValidateEntity', 'doc':\n                     'Validates an Entity against SHACL shapes.', 'calls':\n                     'validate_entity(target:str, shapes_graph:str) -&gt;\n                     bool', 'module': 'cogitarelink.verify.validator'},\n                     'GraphManager': {'layer': 'Instances', 'tool':\n                     'GraphManager', 'doc': 'Manages RDF graphs and\n                     triples.', 'calls': 'query(q:str) -&gt; dict', 'module':\n                     'cogitarelink.core.graph'}, 'Signer': {'layer':\n                     'Verification', 'tool': 'VerifySignature', 'doc':\n                     'Verifies a digital signature on a named graph.',\n                     'calls': 'verify(graph_id:str, signature:str) -&gt;\n                     bool', 'module': 'cogitarelink.verify.signer'},\n                     'AddReflection': {'layer': 'Utility', 'tool':\n                     'AddReflection', 'doc': 'Persist a reflection into\n                     semantic memory', 'calls': 'add(text:str,\n                     tags:list=None)-&gt;str', 'module':\n                     'cogitarelink_dspy.memory'}, 'RecallReflection':\n                     {'layer': 'Utility', 'tool': 'RecallReflection',\n                     'doc': 'Retrieve recent reflection notes', 'calls':\n                     'retrieve(limit:int, tag_filter:str=None)-&gt;list',\n                     'module': 'cogitarelink_dspy.memory'},\n                     'ReflectionPrompt': {'layer': 'Utility', 'tool':\n                     'ReflectionPrompt', 'doc': 'Format recent notes for\n                     prompt injection', 'calls':\n                     'as_prompt(limit:int)-&gt;str', 'module':\n                     'cogitarelink_dspy.memory'}})\n\n*Return all tool definitions for a specific layer.\nArgs: layer (str): The layer name to filter by registry (dict, optional): The component registry to use. Defaults to COMPONENTS.\nReturns: dict: Dictionary of component name to metadata for the specified layer*\n\n# Test our component registry and helper functions\nall_layers = list_layers()\nprint(f\"Discovered layers: {all_layers}\")\nassert \"Context\" in all_layers\nassert \"Rules\" in all_layers\nassert \"Instances\" in all_layers\n\n# Test getting tools by layer\nutility_tools = get_tools_by_layer(\"Utility\")\nassert \"Echo\" in utility_tools\nassert utility_tools[\"Echo\"][\"tool\"] == \"EchoMessage\"\n\n# Display a sample of documentation\nfor name, meta in list(COMPONENTS.items())[:2]:\n    print(f\"Tool: {meta['tool']} [Layer: {meta['layer']}]\")\n    print(f\"Doc: {meta['doc']}\")\n    print(f\"Calls: {meta['calls']}\")\n    print(\"-\" * 40)\n\n\nsource\n\n\nvalidate_component_registry\n\n validate_component_registry (registry={'Utils': {'layer': 'Utility',\n                              'tool': 'EchoMessage', 'doc': 'Simply echoes\n                              the input message back.', 'calls':\n                              'load_module_source(module_name:str,\n                              full_name:bool=False) -&gt; str', 'module':\n                              'cogitarelink.utils'}, 'ContextProcessor':\n                              {'layer': 'Context', 'tool': 'LoadContext',\n                              'doc': 'Loads and processes JSON-LD\n                              contexts.', 'calls': 'compact(doc:dict,\n                              ctx:dict) -&gt; dict', 'module':\n                              'cogitarelink.core.context'},\n                              'VocabRegistry': {'layer': 'Ontology',\n                              'tool': 'FetchOntology', 'doc': 'Accesses\n                              the vocabulary registry.', 'calls':\n                              'resolve(uri:str) -&gt; dict', 'module':\n                              'cogitarelink.vocab.registry'},\n                              'ValidateEntity': {'layer': 'Rules', 'tool':\n                              'ValidateEntity', 'doc': 'Validates an\n                              Entity against SHACL shapes.', 'calls':\n                              'validate_entity(target:str,\n                              shapes_graph:str) -&gt; bool', 'module':\n                              'cogitarelink.verify.validator'},\n                              'GraphManager': {'layer': 'Instances',\n                              'tool': 'GraphManager', 'doc': 'Manages RDF\n                              graphs and triples.', 'calls': 'query(q:str)\n                              -&gt; dict', 'module':\n                              'cogitarelink.core.graph'}, 'Signer':\n                              {'layer': 'Verification', 'tool':\n                              'VerifySignature', 'doc': 'Verifies a\n                              digital signature on a named graph.',\n                              'calls': 'verify(graph_id:str,\n                              signature:str) -&gt; bool', 'module':\n                              'cogitarelink.verify.signer'},\n                              'AddReflection': {'layer': 'Utility',\n                              'tool': 'AddReflection', 'doc': 'Persist a\n                              reflection into semantic memory', 'calls':\n                              'add(text:str, tags:list=None)-&gt;str',\n                              'module': 'cogitarelink_dspy.memory'},\n                              'RecallReflection': {'layer': 'Utility',\n                              'tool': 'RecallReflection', 'doc': 'Retrieve\n                              recent reflection notes', 'calls':\n                              'retrieve(limit:int,\n                              tag_filter:str=None)-&gt;list', 'module':\n                              'cogitarelink_dspy.memory'},\n                              'ReflectionPrompt': {'layer': 'Utility',\n                              'tool': 'ReflectionPrompt', 'doc': 'Format\n                              recent notes for prompt injection', 'calls':\n                              'as_prompt(limit:int)-&gt;str', 'module':\n                              'cogitarelink_dspy.memory'}})\n\nValidate that all entries in the component registry have required fields.\n\n# Test the validation function\nerrors = validate_component_registry()\nassert len(errors) == 0, f\"Found errors in component registry: {errors}\"\n\n# Test adding invalid components\ninvalid_registry = COMPONENTS.copy()\ninvalid_registry[\"BadComponent\"] = {\n    \"layer\": \"Utility\",\n    \"tool\": \"Invalid Tool Name\",  # Contains spaces, invalid identifier\n    \"doc\": \"This is a bad component.\"\n    # Missing calls and module\n}\n\nerrors = validate_component_registry(invalid_registry)\nprint(f\"Validation found {len(errors)} errors in the invalid registry:\")\nfor error in errors:\n    print(f\"- {error}\")",
+    "crumbs": [
+      "archive",
+      "Component Catalog"
+    ]
+  },
+  {
+    "objectID": "archive/wrappers.html",
+    "href": "archive/wrappers.html",
+    "title": "Tool Wrappers",
+    "section": "",
+    "text": "source",
+    "crumbs": [
+      "archive",
+      "Tool Wrappers"
+    ]
+  },
+  {
+    "objectID": "archive/wrappers.html#using-the-generated-tools",
+    "href": "archive/wrappers.html#using-the-generated-tools",
+    "title": "Tool Wrappers",
+    "section": "Using the Generated Tools",
+    "text": "Using the Generated Tools\nEach tool is a DSPy Module class that can be instantiated and used in a DSPy pipeline. Here’s how to use the tools:\n\nIndividual Tool Usage:\n\nInstantiate a specific tool using its class\nCall it with the appropriate parameters as defined in its signature\n\nLayer-Based Tool Selection:\n\nUse the group_tools_by_layer() function to organize tools by layer\nSelect tools from the appropriate layer based on the user’s query\n\nIntegration with DSPy Agent:\n\nPass the entire TOOLS list to a dspy.StructuredAgent\nThe agent will be able to discover and use the tools based on their signatures and documentation\n\n\n\n# Example: Create an agent that can use our tools\ndef create_semantic_agent(lm=None):\n    \"\"\"Create a semantic agent with the generated tools.\n    \n    This function will eventually be moved to its own module. It's shown here\n    as an illustration of how the tools will be used in a DSPy agent.\n    \"\"\"\n    import dspy\n    from cogitarelink_dspy.core import default_lm\n    \n    # Use the LLM from core if none is provided\n    lm = lm or default_lm\n    \n    # Create a system prompt that explains the 4-layer architecture\n    system_prompt = \"\"\"\n    You are a Semantic-Web agent that reasons over a 4-layer architecture:\n    1. Context - Working with JSON-LD contexts and namespaces\n    2. Ontology - Using vocabularies and ontology terms\n    3. Rules - Applying validation rules and shapes\n    4. Instances - Managing actual data instances\n    5. Verification - Verifying and signing graph data\n    \n    Every tool is tagged with its PRIMARY layer. When answering a user question,\n    pick the tool from the HIGHEST layer that suffices to answer the question.\n    \"\"\"\n    \n    semantic_lm = dspy.LM(lm.model, system=system_prompt) if lm else None\n    \n    # Create a StructuredAgent with our tools\n    agent = dspy.StructuredAgent(\n        tools=get_tools(),  # Get tools using the getter function\n        lm=semantic_lm\n    )\n    \n    return agent\n\n# This will be implemented in a future notebook focused on the agent\n# agent = create_semantic_agent() \n# result = agent.query(\"Load the schema.org context\")",
+    "crumbs": [
+      "archive",
+      "Tool Wrappers"
+    ]
+  },
+  {
+    "objectID": "05_memory_telemetry_overview.html",
+    "href": "05_memory_telemetry_overview.html",
+    "title": "Memory & Telemetry Foundations",
+    "section": "",
+    "text": "Memory & Telemetry Foundations\nThis notebook documents the new standalone modules and contexts under cogitarelink_dspy:\n\nTelemetry context:\n\ncogitarelink_dspy/contexts/telemetry.context.jsonld\n\nTelemetryStore module:\n\ncogitarelink_dspy/telemetry.py\n\nReflectionStore adjustments:\n\ncogitarelink_dspy/memory.py (ensures clref prefix exists)\n\nComponents registry updates:\n\ncogitarelink_dspy/components.py (added LogTelemetry, removed nbdev header)\n\nWrapper generator updates:\n\ncogitarelink_dspy/wrappers.py (enhanced parse_signature, patched BootstrapFewShot, fixed memory-tool signatures)\n\n\nThis file is for reference and is not exported by nbdev."
+  },
+  {
+    "objectID": "core.html",
+    "href": "core.html",
+    "title": "Hello-World DSPy Agent",
+    "section": "",
+    "text": "source\n\nEcho\n\n Echo (callbacks=None)\n\nEchoes the input message back.\n\nsource\n\n\nmake_hello_agent\n\n make_hello_agent (llm=None)\n\n*Create a simple DSPy agent with dynamic tool loading and LLM capabilities.\nArgs: llm: A DSPy language model. If None, uses the default configured LM.\nReturns: A HelloAgent instance that can process messages using all available tools and LLM.*\n\n# Demo the Hello-World agent with dynamic tool loading capabilities\ntry:\n    agent = make_hello_agent()\n    \n    # Test with a simple message\n    message = \"Hello, DSPy! What can you do with Semantic Web data?\"\n    print(f\"Testing with message: \\\"{message}\\\"\")\n    result = agent(message)\n    \n    print(f\"\\nLayer identified: {result.get('layer_used', 'Unknown')}\")\n    print(f\"Tool selected: {result.get('tool_used', 'None')}\")\n    print(f\"\\nLLM response: {result.get('llm_response', 'No response')}\")\nexcept Exception as e:\n    print(f\"Error testing agent: {e}\")\n    print(\"This is expected during notebook testing without a real LLM connection.\")",
+    "crumbs": [
+      "Hello-World DSPy Agent"
+    ]
+  },
+  {
+    "objectID": "pipeline.html",
+    "href": "pipeline.html",
+    "title": "Structured Agents and Pipelines",
+    "section": "",
+    "text": "This notebook implements structured agent pipelines for the Cogitarelink-DSPy integration. We’re creating agents that can reason about semantic web data across different layers of abstraction:\n\nContext Layer - Working with JSON-LD contexts and namespaces\nOntology Layer - Exploring ontologies and vocabularies\nRules Layer - Validating data against rules (SHACL, etc.)\nInstances Layer - Working with actual data/triples\nVerification Layer - Verifying and signing data\n\nIn addition, we have a Utility Layer for cross-cutting concerns like memory and telemetry.\nOur approach uses DSPy’s StructuredAgent which provides a framework for tool selection and execution based on the user’s query. We’ll implement two levels of agents:\n\nHelloLOD: A lightweight agent with essential tools for common tasks\nFullPlanner: A comprehensive agent with all available tools\n\nWe’ll also integrate memory capabilities to enable the agent to learn from previous experiences.",
+    "crumbs": [
+      "Structured Agents and Pipelines"
+    ]
+  },
+  {
+    "objectID": "pipeline.html#introduction",
+    "href": "pipeline.html#introduction",
+    "title": "Structured Agents and Pipelines",
+    "section": "",
+    "text": "This notebook implements structured agent pipelines for the Cogitarelink-DSPy integration. We’re creating agents that can reason about semantic web data across different layers of abstraction:\n\nContext Layer - Working with JSON-LD contexts and namespaces\nOntology Layer - Exploring ontologies and vocabularies\nRules Layer - Validating data against rules (SHACL, etc.)\nInstances Layer - Working with actual data/triples\nVerification Layer - Verifying and signing data\n\nIn addition, we have a Utility Layer for cross-cutting concerns like memory and telemetry.\nOur approach uses DSPy’s StructuredAgent which provides a framework for tool selection and execution based on the user’s query. We’ll implement two levels of agents:\n\nHelloLOD: A lightweight agent with essential tools for common tasks\nFullPlanner: A comprehensive agent with all available tools\n\nWe’ll also integrate memory capabilities to enable the agent to learn from previous experiences.",
+    "crumbs": [
+      "Structured Agents and Pipelines"
+    ]
+  },
+  {
+    "objectID": "pipeline.html#system-prompts",
+    "href": "pipeline.html#system-prompts",
+    "title": "Structured Agents and Pipelines",
+    "section": "System Prompts",
+    "text": "System Prompts\nThe heart of our agent’s reasoning is the system prompt, which explains the semantic web layers and how to select the appropriate tool based on the user’s query. Let’s define the system prompts for our agents.\n\nsource\n\nget_memory_enhanced_system\n\n get_memory_enhanced_system (reflection_prompt='')\n\n*Generate a system prompt enhanced with reflections from memory.\nArgs: reflection_prompt (str): Formatted reflections to include in the prompt\nReturns: str: The enhanced system prompt*",
+    "crumbs": [
+      "Structured Agents and Pipelines"
+    ]
+  },
+  {
+    "objectID": "pipeline.html#available-tool-information",
+    "href": "pipeline.html#available-tool-information",
+    "title": "Structured Agents and Pipelines",
+    "section": "Available Tool Information",
+    "text": "Available Tool Information\nLet’s examine what tools are available from our component registry. This helps us understand the capabilities we can provide to our agents.\n\n# Examine available tools and layers (not exported)\ntools = get_tools()\nprint(f\"Available tools: {len(tools)}\")\n\nlayers = list_layers()\nprint(f\"\\nAvailable layers: {', '.join(layers)}\")\n\ntools_by_layer = group_tools_by_layer(tools)\nfor layer, layer_tools in tools_by_layer.items():\n    print(f\"\\n{layer} Layer: {len(layer_tools)} tools\")\n    for tool in layer_tools:\n        print(f\"  - {tool.__name__}: {tool.__doc__.split('[Layer')[0].strip()}\")\n\nAvailable tools: 9\n\nAvailable layers: Context, Instances, Ontology, Rules, Utility, Verification\n\nUtility Layer: 4 tools\n  - EchoMessage: Simply echoes the input message back.\n  - AddReflection: Persist a reflection into semantic memory\n  - RecallReflection: Retrieve recent reflection notes\n  - ReflectionPrompt: Format recent notes for prompt injection\n\nContext Layer: 1 tools\n  - LoadContext: Loads and processes JSON-LD contexts.\n\nOntology Layer: 1 tools\n  - FetchOntology: Accesses the vocabulary registry.\n\nRules Layer: 1 tools\n  - ValidateEntity: Validates an Entity against SHACL shapes.\n\nInstances Layer: 1 tools\n  - GraphManager: Manages RDF graphs and triples.\n\nVerification Layer: 1 tools\n  - VerifySignature: Verifies a digital signature on a named graph.",
+    "crumbs": [
+      "Structured Agents and Pipelines"
+    ]
+  },
+  {
+    "objectID": "pipeline.html#hellolod-lightweight-semantic-web-agent",
+    "href": "pipeline.html#hellolod-lightweight-semantic-web-agent",
+    "title": "Structured Agents and Pipelines",
+    "section": "HelloLOD: Lightweight Semantic Web Agent",
+    "text": "HelloLOD: Lightweight Semantic Web Agent\nOur HelloLOD agent is a minimal implementation that provides basic semantic web functionality. It includes only the essential tools for common tasks, making it faster and more focused than the full agent.\nThe key design decisions for HelloLOD are:\n\nInclude one representative tool from each semantic layer\nExclude memory tools initially for simplicity\nUse a straightforward system prompt without complex reflection\n\nThis agent serves as both a proof of concept and a starting point for more complex implementations.\n\nsource\n\nbuild_hellolod\n\n build_hellolod (lm=None)\n\n*Create a minimal Linked Open Data agent with basic capabilities.\nThis agent includes one representative tool from each semantic layer but excludes memory tools for simplicity.\nArgs: lm (dspy.LM, optional): Language model to use. If None, must be configured later.\nReturns: dspy.StructuredAgent: A configured agent ready for use*",
+    "crumbs": [
+      "Structured Agents and Pipelines"
+    ]
+  },
+  {
+    "objectID": "pipeline.html#hellolodwithmemory-adding-reflection-capabilities",
+    "href": "pipeline.html#hellolodwithmemory-adding-reflection-capabilities",
+    "title": "Structured Agents and Pipelines",
+    "section": "HelloLODWithMemory: Adding Reflection Capabilities",
+    "text": "HelloLODWithMemory: Adding Reflection Capabilities\nThe next evolution of our agent adds memory capabilities through the ReflectionStore. This allows the agent to:\n\nStore reflections about its experiences\nRecall previous reflections when making decisions\nLearn from past interactions\n\nBy incorporating memory, the agent can improve over time and avoid repeating mistakes.\n\nsource\n\nbuild_hellolod_with_memory\n\n build_hellolod_with_memory (lm=None, reflection_limit=5)\n\n*Create a Linked Open Data agent with memory capabilities.\nThis agent extends HelloLOD by adding memory tools for storing and retrieving reflections about past experiences.\nArgs: lm (dspy.LM, optional): Language model to use. If None, must be configured later. reflection_limit (int): Number of reflections to include in the system prompt.\nReturns: dspy.StructuredAgent: A configured agent with memory capabilities*",
+    "crumbs": [
+      "Structured Agents and Pipelines"
+    ]
+  },
+  {
+    "objectID": "pipeline.html#fullplanner-comprehensive-semantic-web-agent",
+    "href": "pipeline.html#fullplanner-comprehensive-semantic-web-agent",
+    "title": "Structured Agents and Pipelines",
+    "section": "FullPlanner: Comprehensive Semantic Web Agent",
+    "text": "FullPlanner: Comprehensive Semantic Web Agent\nOur most capable agent, FullPlanner, includes all available tools and advanced memory integration. This agent is designed for complex semantic web tasks that require multiple tools and sophisticated reasoning.\nKey features of the FullPlanner:\n\nIncludes all tools from all semantic layers\nFull memory integration with reflection capabilities\nEnhanced system prompt with layer-specific reasoning\nSupport for telemetry to track performance\n\nThis agent represents the full power of our semantic web framework.\n\nsource\n\nbuild_full_planner\n\n build_full_planner (lm=None, reflection_limit=5)\n\n*Create a comprehensive semantic web agent with all available tools.\nThis agent includes all tools from all layers, along with memory integration and enhanced reasoning capabilities.\nArgs: lm (dspy.LM, optional): Language model to use. If None, must be configured later. reflection_limit (int): Number of reflections to include in the system prompt.\nReturns: dspy.StructuredAgent: A fully configured comprehensive agent*",
+    "crumbs": [
+      "Structured Agents and Pipelines"
+    ]
+  },
+  {
+    "objectID": "pipeline.html#testing-helper-functions",
+    "href": "pipeline.html#testing-helper-functions",
+    "title": "Structured Agents and Pipelines",
+    "section": "Testing Helper Functions",
+    "text": "Testing Helper Functions\nTo streamline testing and demonstration, we’ll create helper functions that can run queries against our agents and display the results in a structured format.\n\nsource\n\nrun_test_query\n\n run_test_query (agent, query, save_reflection=False,\n                 reflection_tags=None)\n\n*Run a test query through an agent and format the results.\nThis function runs a query through the specified agent and returns the response along with metadata about tool usage and layer selection. Optionally saves the interaction as a reflection for future reference.\nArgs: agent (dspy.StructuredAgent): The agent to query query (str): The user query to process save_reflection (bool): Whether to save the interaction as a reflection reflection_tags (list): Tags to apply to the reflection\nReturns: dict: Response and metadata about the interaction*",
+    "crumbs": [
+      "Structured Agents and Pipelines"
+    ]
+  },
+  {
+    "objectID": "pipeline.html#complete-pipeline-factory",
+    "href": "pipeline.html#complete-pipeline-factory",
+    "title": "Structured Agents and Pipelines",
+    "section": "Complete Pipeline Factory",
+    "text": "Complete Pipeline Factory\nFinally, we’ll create a factory function that can produce any of our agent types based on a configuration. This provides a clean interface for applications to obtain the right agent for their needs.\n\nsource\n\ncreate_agent\n\n create_agent (agent_type='hello', lm=None, reflection_limit=5)\n\n*Factory function to create different types of semantic web agents.\nThis function creates and returns the specified type of agent, handling the configuration details for each variant.\nArgs: agent_type (str): Type of agent to create (‘hello’, ‘memory’, or ‘full’) lm (dspy.LM, optional): Language model to use. If None, must be configured later. reflection_limit (int): Number of reflections to include for memory-enabled agents.\nReturns: dspy.StructuredAgent: The configured agent of the requested type\nRaises: ValueError: If an invalid agent_type is specified*",
+    "crumbs": [
+      "Structured Agents and Pipelines"
+    ]
+  },
+  {
+    "objectID": "pipeline.html#example-usage",
+    "href": "pipeline.html#example-usage",
+    "title": "Structured Agents and Pipelines",
+    "section": "Example Usage",
+    "text": "Example Usage\nLet’s demonstrate how to use these agents with some example queries. Note that you’ll need to configure a language model before running these examples.",
+    "crumbs": [
+      "Structured Agents and Pipelines"
+    ]
+  },
+  {
+    "objectID": "pipeline.html#conclusion",
+    "href": "pipeline.html#conclusion",
+    "title": "Structured Agents and Pipelines",
+    "section": "Conclusion",
+    "text": "Conclusion\nIn this notebook, we’ve implemented a layered approach to semantic web agents using DSPy’s structured agent framework. The key components we’ve created are:\n\nSystem prompts that explain the semantic web layers and guide tool selection\nAgent implementations at different capability levels (HelloLOD, HelloLODWithMemory, FullPlanner)\nMemory integration to learn from past interactions\nTesting utilities to validate agent behavior\n\nThese components form the foundation of our semantic web agent architecture, enabling sophisticated reasoning across the different layers of the semantic web stack. The agents can now be integrated into applications to provide semantic web capabilities through natural language interfaces.",
+    "crumbs": [
+      "Structured Agents and Pipelines"
+    ]
+  },
+  {
+    "objectID": "archive/memory.html",
+    "href": "archive/memory.html",
+    "title": "Memory",
+    "section": "",
+    "text": "source\n\nReflectionStore\n\n ReflectionStore (graph:cogitarelink.core.graph.GraphManager)\n\n*Persist ‘lesson learned’ notes as JSON-LD entities in the Cogitarelink graph.\nThis class provides a semantic memory store for agent reflections, storing them as properly typed JSON-LD entities in the Cogitarelink graph with full provenance. It enables storing, retrieving, and formatting reflections for use in prompts.\nAttributes: graph (GraphManager): The Cogitarelink graph manager instance to use for storage*",
+    "crumbs": [
+      "archive",
+      "Memory"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "cogitarelink-dspy",
+    "section": "",
+    "text": "This repository implements a DSPy-based agent that integrates with the Cogitarelink framework for Semantic Web data, with a focus on providing intelligent navigation of Linked Data resources. The agent is designed to understand and operate within a 4-layer Semantic Web architecture, selecting the appropriate tools for different user queries.",
+    "crumbs": [
+      "cogitarelink-dspy"
+    ]
+  },
+  {
+    "objectID": "index.html#developer-guide",
+    "href": "index.html#developer-guide",
+    "title": "cogitarelink-dspy",
+    "section": "Developer Guide",
+    "text": "Developer Guide\nIf you are new to using nbdev here are some useful pointers to get you started.\n\nInstall cogitarelink_dspy in Development mode\n# make sure cogitarelink_dspy package is installed in development mode\n$ pip install -e .\n\n# make changes under nbs/ directory\n# ...\n\n# compile to have changes apply to cogitarelink_dspy\n$ nbdev_prepare",
+    "crumbs": [
+      "cogitarelink-dspy"
+    ]
+  },
+  {
+    "objectID": "index.html#usage",
+    "href": "index.html#usage",
+    "title": "cogitarelink-dspy",
+    "section": "Usage",
+    "text": "Usage\n\nInstallation\nInstall latest from the GitHub repository:\n$ pip install git+https://github.com/LA3D/cogitarelink-dspy.git\nor from conda\n$ conda install -c LA3D cogitarelink_dspy\nor from pypi\n$ pip install cogitarelink_dspy\n\n\nDocumentation\nDocumentation can be found hosted on this GitHub repository’s pages. Additionally you can find package manager specific guidelines on conda and pypi respectively.",
+    "crumbs": [
+      "cogitarelink-dspy"
+    ]
+  },
+  {
+    "objectID": "index.html#how-to-use",
+    "href": "index.html#how-to-use",
+    "title": "cogitarelink-dspy",
+    "section": "How to use",
+    "text": "How to use",
+    "crumbs": [
+      "cogitarelink-dspy"
+    ]
+  },
+  {
+    "objectID": "index.html#research-overview",
+    "href": "index.html#research-overview",
+    "title": "cogitarelink-dspy",
+    "section": "Research Overview",
+    "text": "Research Overview\nThis project explores how Large Language Models (LLMs) can be combined with Semantic Web technologies to create agents that effectively navigate and reason over Linked Data. Our approach focuses on several key research areas:\n\n1. Semantic Layer Architecture\nWe implement a 4-layer architecture for Semantic Web navigation:\n\nContext Layer - Working with JSON-LD contexts and namespaces\nOntology Layer - Accessing and interpreting vocabularies and ontology terms\nRules Layer - Applying validation rules and shapes (SHACL)\nInstances Layer - Managing actual data instances and entity graphs\nVerification Layer - Verifying and signing graphs for provenance\n\nThe agent is designed to select the highest appropriate layer for each user request, enabling efficient access to knowledge at various levels of abstraction.\n\n\n2. Semantic Memory and Reflection\nThe agent maintains a semantic memory store implemented as a knowledge graph with full provenance. This allows the agent to:\n\nRecord “lessons learned” as reflection notes\nStore those reflections as properly typed JSON-LD entities\nRetrieve and use past experiences to guide future reasoning\nTrack errors and validation failures to avoid repetition\n\n\n\n3. Tool Generation Architecture\nA key innovation is our component registry pattern:\n\nAll available tools are defined in a central catalog (COMPONENTS in components.py)\nDSPy tool wrappers are automatically generated from this registry\nEach tool is tagged with its appropriate semantic layer\nThis enables a clean separation between tool definitions and their implementation\n\n\n\n4. Real-World Linked Data Integration\nThe agent can interact with:\n\nWikidata via SPARQL\nSchema.org JSON-LD collections\nPublic SHACL validation shapes\nCustom knowledge graphs with full provenance tracking",
+    "crumbs": [
+      "cogitarelink-dspy"
+    ]
+  },
+  {
+    "objectID": "index.html#code-examples",
+    "href": "index.html#code-examples",
+    "title": "cogitarelink-dspy",
+    "section": "Code Examples",
+    "text": "Code Examples\n# Initialize a basic Cogitarelink DSPy agent\nfrom cogitarelink_dspy.core import make_hello_agent\n\n# Create an agent with default LLM configuration\nagent = make_hello_agent()\n\n# Process a query that will be routed to the appropriate semantic layer\nresult = agent(\"What ontology terms are available for describing a Person?\")\nprint(f\"Layer used: {result['layer_used']}\")\nprint(f\"Response: {result['llm_response']}\")",
+    "crumbs": [
+      "cogitarelink-dspy"
+    ]
+  },
+  {
+    "objectID": "index.html#project-structure",
+    "href": "index.html#project-structure",
+    "title": "cogitarelink-dspy",
+    "section": "Project Structure",
+    "text": "Project Structure\nThe project follows Jeremy Howard’s literate programming approach with nbdev:\n\nNotebooks First: All code is developed in notebooks under nbs/\nAuto-Export: Python modules are auto-generated using nbdev_export\nComponent Registry: Central tool definitions in components.py\nMemory: JSON-LD based semantic memory system in memory.py\nTelemetry: Knowledge graph-based telemetry in telemetry.py",
+    "crumbs": [
+      "cogitarelink-dspy"
+    ]
+  },
+  {
+    "objectID": "index.html#research-goals",
+    "href": "index.html#research-goals",
+    "title": "cogitarelink-dspy",
+    "section": "Research Goals",
+    "text": "Research Goals\nOur ultimate goals with this project are to:\n\nCreate an agent that can effectively operate over the entire Semantic Web stack\nDemonstrate how LLMs can be guided by semantic layer understanding\nEnable mixed-initiative interactions between users and Linked Data resources\nBuild a foundation for verifiable, provenance-tracked knowledge systems",
+    "crumbs": [
+      "cogitarelink-dspy"
+    ]
+  },
+  {
+    "objectID": "index.html#getting-started",
+    "href": "index.html#getting-started",
+    "title": "cogitarelink-dspy",
+    "section": "Getting Started",
+    "text": "Getting Started\nTo start working with the Cogitarelink-DSPy agent, you’ll need to set up your environment:\n# Install dependencies\n!pip install dspy cogitarelink\n\n# Import the core modules\nimport dspy\nfrom cogitarelink_dspy.core import make_hello_agent\nfrom cogitarelink_dspy.components import COMPONENTS, get_tools_by_layer\nfrom cogitarelink_dspy.wrappers import get_tools\n\n# Configure DSPy with your preferred LLM\n# For OpenAI models:\nimport os\nos.environ[\"OPENAI_API_KEY\"] = \"your-api-key-here\"\nlm = dspy.LM(\"openai/gpt-4o-mini\")\ndspy.configure(lm=lm)\n\n# Create an agent\nagent = make_hello_agent()\n\n# Run a simple test query\nresult = agent(\"What are the core components of Cogitarelink?\")\nprint(result[\"llm_response\"])\n\nWorking with Semantic Layers\nTo work with specific semantic layers:\n# Get all tools for the Context layer\ncontext_tools = get_tools_by_layer(\"Context\")\nprint(f\"Available Context tools: {list(context_tools.keys())}\")\n\n# Get all tools for the Ontology layer\nontology_tools = get_tools_by_layer(\"Ontology\")\nprint(f\"Available Ontology tools: {list(ontology_tools.keys())}\")\n\n\nUsing the Memory System\nThe agent can record reflections and learn from experience:\nfrom cogitarelink.core.graph import GraphManager\nfrom cogitarelink_dspy.memory import ReflectionStore\n\n# Initialize a graph manager and reflection store\ngraph = GraphManager(use_rdflib=True)\nmemory = ReflectionStore(graph)\n\n# Add a reflection note\nmemory.add(\"When querying Wikidata, use wdt: prefix for direct properties\",\n           tags=[\"wikidata\", \"sparql\"])\n\n# Retrieve recent reflections\nnotes = memory.retrieve(limit=5)\nfor note in notes:\n    print(f\"- {note.content['text']}\")\n\n# Use reflections in system prompt\nreflection_prompt = memory.as_prompt()\nprint(reflection_prompt)",
+    "crumbs": [
+      "cogitarelink-dspy"
+    ]
+  }
+]

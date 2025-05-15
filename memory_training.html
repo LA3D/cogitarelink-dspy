@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.31">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="A guide to training and saving the Reflection Memory component for Cogitarelink DSPy agents.">
+
+<title>Training and Optimizing the Reflection Memory System – cogitarelink-dspy</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-c4832a576a2b2751674216aa53ffbffd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="Training and Optimizing the Reflection Memory System – cogitarelink-dspy">
+<meta property="og:description" content="A guide to training and saving the Reflection Memory component for Cogitarelink DSPy agents.">
+<meta property="og:site_name" content="cogitarelink-dspy">
+<meta name="twitter:title" content="Training and Optimizing the Reflection Memory System – cogitarelink-dspy">
+<meta name="twitter:description" content="A guide to training and saving the Reflection Memory component for Cogitarelink DSPy agents.">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">cogitarelink-dspy</span>
+    </a>
+  </div>
+        <div class="quarto-navbar-tools tools-end">
+</div>
+          <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./memory_training.html">Training and Optimizing the Reflection Memory System</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">cogitarelink-dspy</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./core.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Hello-World DSPy Agent</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./pipeline.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Structured Agents and Pipelines</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./memory_training.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Training and Optimizing the Reflection Memory System</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">archive</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./archive/components.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Component Catalog</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./archive/wrappers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tool Wrappers</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./archive/memory.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Memory</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#setup-and-configuration" id="toc-setup-and-configuration" class="nav-link active" data-scroll-target="#setup-and-configuration">Setup and Configuration</a></li>
+  <li><a href="#create-or-load-training-data" id="toc-create-or-load-training-data" class="nav-link" data-scroll-target="#create-or-load-training-data">Create or Load Training Data</a></li>
+  <li><a href="#define-the-metric-function" id="toc-define-the-metric-function" class="nav-link" data-scroll-target="#define-the-metric-function">Define the Metric Function</a>
+  <ul class="collapse">
+  <li><a href="#tool_match" id="toc-tool_match" class="nav-link" data-scroll-target="#tool_match">tool_match</a></li>
+  </ul></li>
+  <li><a href="#create-a-memory-planner-agent" id="toc-create-a-memory-planner-agent" class="nav-link" data-scroll-target="#create-a-memory-planner-agent">Create a Memory Planner Agent</a>
+  <ul class="collapse">
+  <li><a href="#memoryplanner" id="toc-memoryplanner" class="nav-link" data-scroll-target="#memoryplanner">MemoryPlanner</a></li>
+  </ul></li>
+  <li><a href="#train-the-memory-planner-with-dspy" id="toc-train-the-memory-planner-with-dspy" class="nav-link" data-scroll-target="#train-the-memory-planner-with-dspy">Train the Memory Planner with DSPy</a>
+  <ul class="collapse">
+  <li><a href="#train_memory_planner" id="toc-train_memory_planner" class="nav-link" data-scroll-target="#train_memory_planner">train_memory_planner</a></li>
+  <li><a href="#train_memory_planner_simba" id="toc-train_memory_planner_simba" class="nav-link" data-scroll-target="#train_memory_planner_simba">train_memory_planner_simba</a></li>
+  </ul></li>
+  <li><a href="#save-and-load-the-optimized-planner" id="toc-save-and-load-the-optimized-planner" class="nav-link" data-scroll-target="#save-and-load-the-optimized-planner">Save and Load the Optimized Planner</a>
+  <ul class="collapse">
+  <li><a href="#load_optimized_planner" id="toc-load_optimized_planner" class="nav-link" data-scroll-target="#load_optimized_planner">load_optimized_planner</a></li>
+  <li><a href="#save_optimized_planner" id="toc-save_optimized_planner" class="nav-link" data-scroll-target="#save_optimized_planner">save_optimized_planner</a></li>
+  </ul></li>
+  <li><a href="#test-the-optimized-planner" id="toc-test-the-optimized-planner" class="nav-link" data-scroll-target="#test-the-optimized-planner">Test the Optimized Planner</a></li>
+  <li><a href="#integration-with-the-cogitarelink-dspy-agent" id="toc-integration-with-the-cogitarelink-dspy-agent" class="nav-link" data-scroll-target="#integration-with-the-cogitarelink-dspy-agent">Integration with the Cogitarelink DSPy Agent</a>
+  <ul class="collapse">
+  <li><a href="#cogitarelinkagent" id="toc-cogitarelinkagent" class="nav-link" data-scroll-target="#cogitarelinkagent">CogitarelinkAgent</a></li>
+  </ul></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/LA3D/cogitarelink-dspy/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div><div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="memory_training.html.md"><i class="bi bi-file-code"></i>CommonMark</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Training and Optimizing the Reflection Memory System</h1>
+</div>
+
+<div>
+  <div class="description">
+    A guide to training and saving the Reflection Memory component for Cogitarelink DSPy agents.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<section id="setup-and-configuration" class="level2">
+<h2 class="anchored" data-anchor-id="setup-and-configuration">Setup and Configuration</h2>
+<p>First, we’ll set up the notebook with the required imports and configure DSPy with an appropriate LLM.</p>
+<div id="cell-3" class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Configure DSPy with your preferred LLM</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># You can use OpenAI, Anthropic, or any local model supported by DSPy</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Example for OpenAI</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># If using OpenAI, set your API key in the environment or pass it directly</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># os.environ["OPENAI_API_KEY"] = "your-api-key"</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># lm = dspy.OpenAI(model="gpt-4o")</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Example for Anthropic</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># os.environ["ANTHROPIC_API_KEY"] = "your-api-key"</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># lm = dspy.LM("anthropic/claude-3-opus-20240229")</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># For testing without an actual LLM, we'll use a mock LLM</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MockLM(dspy.LM):</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.history <span class="op">=</span> []</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> basic_request(<span class="va">self</span>, prompt, <span class="op">**</span>kwargs):</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.history.append(prompt)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> [<span class="st">"This is a mock response for testing"</span>]</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>lm <span class="op">=</span> MockLM()</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>dspy.configure(lm<span class="op">=</span>lm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="create-or-load-training-data" class="level2">
+<h2 class="anchored" data-anchor-id="create-or-load-training-data">Create or Load Training Data</h2>
+<p>Next, we’ll load our development set for training the memory components. In this case, we’ll use the examples from <code>devset_memory.jsonl</code>.</p>
+<div id="cell-5" class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> load_devset(path<span class="op">=</span><span class="st">"../tests/devset_memory.jsonl"</span>):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Load the memory development set from JSONL."""</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    examples <span class="op">=</span> []</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(path, <span class="st">'r'</span>) <span class="im">as</span> f:</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> line <span class="kw">in</span> f:</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>            data <span class="op">=</span> json.loads(line)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Convert to DSPy Example format</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            example <span class="op">=</span> dspy.Example(</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                q<span class="op">=</span>data[<span class="st">"q"</span>],</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>                exp_tool<span class="op">=</span>data[<span class="st">"exp_tool"</span>],</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                use_memory<span class="op">=</span>data.get(<span class="st">"use_memory"</span>, <span class="va">False</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>            ).with_inputs(<span class="st">"q"</span>)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>            examples.append(example)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> examples</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the development set</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>devset <span class="op">=</span> load_devset()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-6" class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the development set</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, example <span class="kw">in</span> <span class="bu">enumerate</span>(devset):</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Example </span><span class="sc">{</span>i<span class="op">+</span><span class="dv">1</span><span class="sc">}</span><span class="ss">:"</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Query: </span><span class="sc">{</span>example<span class="sc">.</span>q<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Expected Tool: </span><span class="sc">{</span>example<span class="sc">.</span>exp_tool<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Use Memory: </span><span class="sc">{</span>example<span class="sc">.</span>use_memory<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"---"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Example 1:
+Query: Remember that wdt:P1476 is title
+Expected Tool: AddReflection
+Use Memory: False
+---
+Example 2:
+Query: What's the Wikidata title property?
+Expected Tool: RecallReflection
+Use Memory: True
+---
+Example 3:
+Query: Inject notes into system prompt
+Expected Tool: ReflectionPrompt
+Use Memory: False
+---
+Example 4:
+Query: Store the fact that schema:name is a common property
+Expected Tool: AddReflection
+Use Memory: False
+---
+Example 5:
+Query: Can you save rdfs:label for later reference?
+Expected Tool: AddReflection
+Use Memory: False
+---
+Example 6:
+Query: Make a note that owl:sameAs indicates identity between resources
+Expected Tool: AddReflection
+Use Memory: False
+---
+Example 7:
+Query: Remember that foaf:Person is a class for people
+Expected Tool: AddReflection
+Use Memory: False
+---
+Example 8:
+Query: Remember that dc:creator represents the author
+Expected Tool: AddReflection
+Use Memory: False
+---
+Example 9:
+Query: Store information that skos:broader indicates hierarchy
+Expected Tool: AddReflection
+Use Memory: False
+---
+Example 10:
+Query: Please recall what you know about Wikidata properties
+Expected Tool: RecallReflection
+Use Memory: True
+---
+Example 11:
+Query: What did I tell you about rdfs:label?
+Expected Tool: RecallReflection
+Use Memory: True
+---
+Example 12:
+Query: Can you retrieve information about owl:sameAs?
+Expected Tool: RecallReflection
+Use Memory: True
+---
+Example 13:
+Query: What do you remember about FOAF ontology?
+Expected Tool: RecallReflection
+Use Memory: True
+---
+Example 14:
+Query: Tell me what you know about Dublin Core properties
+Expected Tool: RecallReflection
+Use Memory: True
+---
+Example 15:
+Query: What did we discuss about SKOS?
+Expected Tool: RecallReflection
+Use Memory: True
+---
+Example 16:
+Query: Format your notes for the system prompt
+Expected Tool: ReflectionPrompt
+Use Memory: False
+---
+Example 17:
+Query: Prepare relevant memory for inclusion in prompt
+Expected Tool: ReflectionPrompt
+Use Memory: False
+---
+Example 18:
+Query: Create a memory summary for the system context
+Expected Tool: ReflectionPrompt
+Use Memory: False
+---
+Example 19:
+Query: Inject your knowledge about RDF into the prompt
+Expected Tool: ReflectionPrompt
+Use Memory: False
+---
+Example 20:
+Query: Format stored notes about ontologies for system use
+Expected Tool: ReflectionPrompt
+Use Memory: False
+---
+Example 21:
+Query: Generate a memory summary for the agent
+Expected Tool: ReflectionPrompt
+Use Memory: False
+---
+Example 22:
+Query: Add dct:title to your knowledge base
+Expected Tool: AddReflection
+Use Memory: False
+---
+Example 23:
+Query: Note that geo:lat and geo:long are for coordinates
+Expected Tool: AddReflection
+Use Memory: False
+---
+Example 24:
+Query: I want you to remember that rdf:type connects instances to classes
+Expected Tool: AddReflection
+Use Memory: False
+---
+Example 25:
+Query: Remember vocab:hasTag is for tagging resources
+Expected Tool: AddReflection
+Use Memory: False
+---
+Example 26:
+Query: Store the fact that vcard:fn is for formatted names
+Expected Tool: AddReflection
+Use Memory: False
+---
+Example 27:
+Query: Keep in mind that sioc:content contains the text content
+Expected Tool: AddReflection
+Use Memory: False
+---
+Example 28:
+Query: What is dct:title used for?
+Expected Tool: RecallReflection
+Use Memory: True
+---
+Example 29:
+Query: Tell me about geographic coordinates in RDF
+Expected Tool: RecallReflection
+Use Memory: True
+---
+Example 30:
+Query: What do you recall about rdf:type?
+Expected Tool: RecallReflection
+Use Memory: True
+---
+Example 31:
+Query: Can you remind me what vocab:hasTag is for?
+Expected Tool: RecallReflection
+Use Memory: True
+---
+Example 32:
+Query: What is vcard:fn in the vCard ontology?
+Expected Tool: RecallReflection
+Use Memory: True
+---
+Example 33:
+Query: What was sioc:content used for?
+Expected Tool: RecallReflection
+Use Memory: True
+---</code></pre>
+</div>
+</div>
+</section>
+<section id="define-the-metric-function" class="level2">
+<h2 class="anchored" data-anchor-id="define-the-metric-function">Define the Metric Function</h2>
+<p>We’ll define a metric function to evaluate whether the agent is selecting the correct tool.</p>
+<hr>
+<p><a href="https://github.com/LA3D/cogitarelink-dspy/blob/main/cogitarelink_dspy/memory_training.py#L44" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="tool_match" class="level3">
+<h3 class="anchored" data-anchor-id="tool_match">tool_match</h3>
+<blockquote class="blockquote">
+<pre><code> tool_match (pred, sample)</code></pre>
+</blockquote>
+<p><em>Check if the expected tool is in the trace.</em></p>
+</section>
+</section>
+<section id="create-a-memory-planner-agent" class="level2">
+<h2 class="anchored" data-anchor-id="create-a-memory-planner-agent">Create a Memory Planner Agent</h2>
+<p>Now, we’ll define a DSPy Module that integrates the memory tools.</p>
+<hr>
+<p><a href="https://github.com/LA3D/cogitarelink-dspy/blob/main/cogitarelink_dspy/memory_training.py#L49" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="memoryplanner" class="level3">
+<h3 class="anchored" data-anchor-id="memoryplanner">MemoryPlanner</h3>
+<blockquote class="blockquote">
+<pre><code> MemoryPlanner (graph_manager=None)</code></pre>
+</blockquote>
+<p><em>A DSPy module that selects the appropriate memory operation based on the query.</em></p>
+</section>
+</section>
+<section id="train-the-memory-planner-with-dspy" class="level2">
+<h2 class="anchored" data-anchor-id="train-the-memory-planner-with-dspy">Train the Memory Planner with DSPy</h2>
+<p>Now we’ll train our memory planner using the DSPy BootstrapFewShot optimizer.</p>
+<hr>
+<p><a href="https://github.com/LA3D/cogitarelink-dspy/blob/main/cogitarelink_dspy/memory_training.py#L103" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="train_memory_planner" class="level3">
+<h3 class="anchored" data-anchor-id="train_memory_planner">train_memory_planner</h3>
+<blockquote class="blockquote">
+<pre><code> train_memory_planner (devset, metric=&lt;function tool_match&gt;,
+                       num_iterations=3, graph_manager=None)</code></pre>
+</blockquote>
+<p><em>Train the memory planner using DSPy’s compilation framework.</em></p>
+<hr>
+<p><a href="https://github.com/LA3D/cogitarelink-dspy/blob/main/cogitarelink_dspy/memory_training.py#L126" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="train_memory_planner_simba" class="level3">
+<h3 class="anchored" data-anchor-id="train_memory_planner_simba">train_memory_planner_simba</h3>
+<blockquote class="blockquote">
+<pre><code> train_memory_planner_simba (trainset, metric=&lt;function tool_match&gt;,
+                             graph_manager=None, max_steps:int=20,
+                             max_demos:int=5, seed:int=42)</code></pre>
+</blockquote>
+<p><em>Train the MemoryPlanner’s tool-selection policy using SIMBA.</em></p>
+<div id="cell-14" class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Train the memory planner</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cogitarelink.core.graph <span class="im">import</span> GraphManager</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>graph_manager <span class="op">=</span> GraphManager()</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">len</span>(devset) <span class="op">&lt;</span> <span class="dv">32</span>:</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># fallback to BootstrapFewShot when dataset is too small</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Trainset too small (</span><span class="sc">{</span><span class="bu">len</span>(devset)<span class="sc">}</span><span class="ss"> &lt; 32); using BootstrapFewShot instead"</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    optimized_planner <span class="op">=</span> train_memory_planner(devset, metric<span class="op">=</span>tool_match, graph_manager<span class="op">=</span>graph_manager)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    optimized_planner <span class="op">=</span> train_memory_planner_simba(</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        trainset<span class="op">=</span>devset,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>        graph_manager<span class="op">=</span>graph_manager,</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>        max_steps<span class="op">=</span><span class="dv">20</span>,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>        max_demos<span class="op">=</span><span class="dv">5</span>,</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>        seed<span class="op">=</span><span class="dv">42</span>,</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"✅ Training complete."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="save-and-load-the-optimized-planner" class="level2">
+<h2 class="anchored" data-anchor-id="save-and-load-the-optimized-planner">Save and Load the Optimized Planner</h2>
+<p>Now we’ll save the optimized planner so it can be distributed with the package.</p>
+<hr>
+<p><a href="https://github.com/LA3D/cogitarelink-dspy/blob/main/cogitarelink_dspy/memory_training.py#L162" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="load_optimized_planner" class="level3">
+<h3 class="anchored" data-anchor-id="load_optimized_planner">load_optimized_planner</h3>
+<blockquote class="blockquote">
+<pre><code> load_optimized_planner
+                         (path='../cogitarelink_dspy/optimized/memory_plan
+                         ner.pkl', graph_manager=None)</code></pre>
+</blockquote>
+<p><em>Load the optimized memory planner from disk.</em></p>
+<hr>
+<p><a href="https://github.com/LA3D/cogitarelink-dspy/blob/main/cogitarelink_dspy/memory_training.py#L151" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="save_optimized_planner" class="level3">
+<h3 class="anchored" data-anchor-id="save_optimized_planner">save_optimized_planner</h3>
+<blockquote class="blockquote">
+<pre><code> save_optimized_planner (planner,
+                         path='../cogitarelink_dspy/optimized/memory_plann
+                         er.pkl')</code></pre>
+</blockquote>
+<p><em>Save the optimized memory planner to disk.</em></p>
+<div id="cell-18" class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Save the optimized planner</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>saved_path <span class="op">=</span> save_optimized_planner(optimized_planner)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Saved optimized planner to </span><span class="sc">{</span>saved_path<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="test-the-optimized-planner" class="level2">
+<h2 class="anchored" data-anchor-id="test-the-optimized-planner">Test the Optimized Planner</h2>
+<p>Let’s test the optimized planner with some examples.</p>
+<div id="cell-20" class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the optimized planner</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>loaded_planner <span class="op">=</span> load_optimized_planner()</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Test with a few examples</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>test_queries <span class="op">=</span> [</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Remember that owl:sameAs is used for identity statements"</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"What do you know about Wikidata properties?"</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Format the recent notes for inclusion in the prompt"</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> query <span class="kw">in</span> test_queries:</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> loaded_planner(q<span class="op">=</span>query)</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Query: </span><span class="sc">{</span>query<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Selected Tool: </span><span class="sc">{</span>result[<span class="st">'trace'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Response: </span><span class="sc">{</span>result[<span class="st">'response'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"---"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="integration-with-the-cogitarelink-dspy-agent" class="level2">
+<h2 class="anchored" data-anchor-id="integration-with-the-cogitarelink-dspy-agent">Integration with the Cogitarelink DSPy Agent</h2>
+<p>Now we’ll show how to integrate the optimized memory planner with the main Cogitarelink DSPy agent.</p>
+<hr>
+<p><a href="https://github.com/LA3D/cogitarelink-dspy/blob/main/cogitarelink_dspy/memory_training.py#L179" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="cogitarelinkagent" class="level3">
+<h3 class="anchored" data-anchor-id="cogitarelinkagent">CogitarelinkAgent</h3>
+<blockquote class="blockquote">
+<pre><code> CogitarelinkAgent (graph_manager=None)</code></pre>
+</blockquote>
+<p><em>A DSPy agent for Cogitarelink with integrated reflection memory.</em></p>
+<div id="cell-23" class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the full agent</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>agent <span class="op">=</span> CogitarelinkAgent()</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Test with different types of queries</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>queries <span class="op">=</span> [</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Remember that rdfs:label is used for display names"</span>,  <span class="co"># Memory operation</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"What is the capital of France?"</span>,  <span class="co"># Regular query</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"What important information do you have about Wikidata properties?"</span>  <span class="co"># Query that uses memory context</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> query <span class="kw">in</span> queries:</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> agent(query<span class="op">=</span>query)</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Query: </span><span class="sc">{</span>query<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Tool Used: </span><span class="sc">{</span>result[<span class="st">'tool_used'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Is Memory Operation: </span><span class="sc">{</span>result[<span class="st">'is_memory_operation'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Response: </span><span class="sc">{</span>result[<span class="st">'response'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"---"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>In this notebook, we’ve demonstrated how to:</p>
+<ol type="1">
+<li>Define a memory planner that integrates with DSPy</li>
+<li>Train and optimize the planner using DSPy’s compilation framework</li>
+<li>Save and load the optimized planner for distribution</li>
+<li>Integrate the memory system with a full Cogitarelink agent</li>
+</ol>
+<p>This approach allows for declarative optimization of the memory system and ensures that agents can effectively utilize semantic memory for reflective learning.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/LA3D\.github\.io\/cogitarelink-dspy");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/LA3D/cogitarelink-dspy/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
