@@ -76,25 +76,19 @@ class ReflectionStore:
             List[Entity]: List of reflection notes as Entity objects
         """
         ids = []
-        triples = self.graph.query(
-            pred="http://schema.org/dateCreated",
-            graph_id=REFLECTION_GRAPH
-        )
+        # GraphManager.query only supports (subj, pred, obj) 
+        triples = self.graph.query(pred="http://schema.org/dateCreated")
         triples.sort(key=lambda t: t[2], reverse=True)
         for s,_,_ in triples[:limit]:
             if tag_filter:
-                tag_triples = self.graph.query(
-                    subj=s, pred="http://schema.org/tags", graph_id=REFLECTION_GRAPH
-                )
+                tag_triples = self.graph.query(subj=s, pred="http://schema.org/tags")
                 tags = [o for (_,_,o) in tag_triples]
                 if tag_filter not in tags:
                     continue
             ids.append(s)
         ents = []
         for nid in ids:
-            t = self.graph.query(
-                subj=nid, pred="http://schema.org/text", graph_id=REFLECTION_GRAPH
-            )
+            t = self.graph.query(subj=nid, pred="http://schema.org/text")
             text = t[0][2] if t else ""
             ents.append(Entity(vocab=["clref","schema"], content={
                 "@id": nid,
